@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# PyInstaller / Build
+build/
+dist/
+*.spec
+.hidden
+
+# Application specific
+tray-vpn-monitor
+tray-vpn-monitor.desktop

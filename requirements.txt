@@ -1,0 +1,5 @@
+# Core UI Framework
+PyQt6==6.6.1
+
+# Packaging Tool
+PyInstaller==6.3.0

@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tray-vpn-monitor"
+version = "1.0.0"
+description = "A system tray application to monitor VPN status on Linux"
+authors = [
+  { name = "Osvaldo Santos" },
+  { name = "Gemini AI" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text="MIT" }
+dependencies = [
+    "PyQt6>=6.6.1",
+    "PyInstaller>=6.3.0",
+]
+
+[project.scripts]
+tray-vpn-monitor = "main:main"
