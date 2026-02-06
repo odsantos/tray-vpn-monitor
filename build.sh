@@ -8,6 +8,7 @@ APP_NAME="tray-vpn-monitor"
 ICON_DIR="$HOME/.local/share/icons"
 ICON_PATH="$ICON_DIR/vpn_monitor_icon.png"
 APP_DIR="$HOME/.local/share/applications"
+AUTOSTART_DIR="$HOME/.config/autostart"
 VENV_DIR=".venv"
 
 echo "--- Initializing Build for $APP_NAME ---"
@@ -21,9 +22,7 @@ VENV_PYTHON="./$VENV_DIR/bin/python3"
 VENV_PIP="./$VENV_DIR/bin/pip"
 
 if [ -d "$VENV_DIR" ]; then
-    # Check if the python binary exists and is executable
     if [ -x "$VENV_PYTHON" ]; then
-        # Check if essential packages are already installed to avoid unnecessary pip/network calls
         if "$VENV_PYTHON" -c "import PyQt6, PyInstaller" 2>/dev/null; then
             echo "Found healthy virtual environment with dependencies. Skipping setup..."
             USE_EXISTING_VENV=true
@@ -37,7 +36,7 @@ if [ -d "$VENV_DIR" ]; then
     fi
 fi
 
-# 3. Virtual Environment Setup (only if needed or for updates)
+# 3. Virtual Environment Setup
 if [ "$USE_EXISTING_VENV" = false ]; then
     echo "Creating fresh virtual environment..."
     python3 -m venv "$VENV_DIR"
@@ -45,7 +44,6 @@ if [ "$USE_EXISTING_VENV" = false ]; then
     $VENV_PIP install --upgrade pip
     $VENV_PIP install PyQt6 PyInstaller
 else
-    # Check for connectivity before attempting an update to prevent hanging/errors
     echo "Checking internet connectivity for potential updates..."
     if ping -c 1 -W 2 8.8.8.8 >/dev/null 2>&1; then
         echo "Internet detected. Ensuring dependencies are up to date..."
@@ -56,7 +54,6 @@ else
 fi
 
 # 4. Icon Generation
-# This uses the venv python to ensure PyQt6 is available for the generation script
 mkdir -p "$ICON_DIR"
 echo "Generating application icon..."
 $VENV_PYTHON -c "
@@ -78,7 +75,7 @@ $VENV_PYTHON -m PyInstaller --noconfirm --onefile --windowed --name "$APP_NAME" 
 
 # 6. Deployment (Moving binary out of dist/ and cleaning up)
 if [ -f "dist/$APP_NAME" ]; then
-    # Move binary to root as per instructions
+    # Move binary to root
     mv "dist/$APP_NAME" .
     echo "$APP_NAME" > .hidden
     
@@ -93,23 +90,35 @@ Terminal=false
 Categories=Network;Utility;
 X-GNOME-Autostart-enabled=true"
 
-    # Install desktop entry
+    # Install desktop entry to Application Menu
+    mkdir -p "$APP_DIR"
     echo "$DESKTOP_CONTENT" > "$APP_DIR/$APP_NAME.desktop"
+    
+    # NEW: Install desktop entry to Autostart
+    mkdir -p "$AUTOSTART_DIR"
+    echo "$DESKTOP_CONTENT" > "$AUTOSTART_DIR/$APP_NAME.desktop"
+    
+    # Local copy for reference
     echo "$DESKTOP_CONTENT" > "$APP_NAME.desktop"
     
-    chmod +x "$APP_NAME" "$APP_NAME.desktop"
+    # Permissions
+    chmod +x "$APP_NAME" 
+    chmod +x "$APP_DIR/$APP_NAME.desktop"
+    chmod +x "$AUTOSTART_DIR/$APP_NAME.desktop"
     
-    # Final Cleanup: No 'dist' or 'build' folders should remain
+    # Final Cleanup
     rm -rf build/ dist/ "$APP_NAME.spec"
     
-    # Get Absolute Paths
+    # Paths for user confirmation
     ABS_BINARY_DIR="$(pwd)"
     ABS_APP_DIR="$APP_DIR"
+    ABS_AUTO_DIR="$AUTOSTART_DIR"
 
     echo "--- SUCCESS! ---"
     echo "Binary located in: file://$ABS_BINARY_DIR"
-    echo "Desktop file created in: file://$ABS_APP_DIR"
+    echo "App Menu file: file://$ABS_APP_DIR/$APP_NAME.desktop"
+    echo "Autostart file: file://$ABS_AUTO_DIR/$APP_NAME.desktop"
 else
-    echo "ERROR: Build failed. Check current directory for main.py"
+    echo "ERROR: Build failed."
     exit 1
 fi
